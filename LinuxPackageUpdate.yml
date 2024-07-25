@@ -1,0 +1,38 @@
+---
+- hosts: debian
+  become: yes
+  tasks:
+  - name: Apt Update
+    apt:
+      name: '*'
+      state: latest
+      update_cache: yes
+      update_only: yes
+    register: yum_update_status
+
+  - name: Remover pacotes não usados mais
+    apt:
+      autoremove: yes
+#Remover caso não queria que seu servidor reboot      
+  - name: Reboot quando pacotes forem atualizados
+    reboot:
+      post_reboot_delay: 60
+    when: apt_update_status.changed
+
+- hosts: yum
+  become: yes
+  tasks:
+    - name: Yum Update
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+        update_only: yes
+      register: yum_update_status
+
+    - name: Remover pacotes não usados mais
+      yum:
+        autoremove: yes
+    - name: Reboot quando os pacotes forem atualizados
+      reboot:
+      when: yum_update_status.changed
